@@ -1,64 +1,56 @@
-(function (io, SimplePeer){
+(function (io, SimplePeer) {
 	var socket = io();
 
 	socket.emit('initialize', {});
 
-	socket.on('webrtc_init', function (data){
+	socket.on('webrtc_init', function (data) {
 		console.log("initiator", data);
 
-		navigator.webkitGetUserMedia({
-			video: true, audio: true
-		}, function (stream){
-			var peer1 = new SimplePeer({
-				initiator: data.initiator,
-				stream: stream
-			});
-			var peer2 = new SimplePeer({stream: stream});
-			
-			//SimplePeer
-			peer1.on('signal', function (data){
-				peer2.signal(data);
-			});
+		navigator.webkitGetUserMedia({video: true, audio: true},
+			function (stream) {
+				var peer = new SimplePeer({
+					initiator: data.initiator,
+					trickle: false,
+					stream: stream,
+					signal: data.signal
+				});
+				console.log("Initiator", peer.initiator);
 
-			peer2.on('signal', function (data){
-				peer1.signal(data);
-			});
+				peer.on('signal', function (data) {
+					if (peer.initiator) {
+						socket.emit('first_id_webrtc', {
+							peerId: JSON.stringify(data)
+						});
+					} else {
+						console.log("funciaon");
+						socket.emit('second_id_webrtc', {
+							peerId: JSON.stringify(data)
+						});
+					}
+				});
 
-			peer2.on('stream', function (stream){
-				var video = document.createElement('video');
-				document.body.appendChild(video);
-				video.src = window.URL.createObjectURL(stream);
-				video.play();
-			});
+				socket.on('peers_ready', function (data) {
+					if (peer.initiator) {
+						peer.signal(data[0].peerId);
+					}	else {
+						peer.signal(data[1].peerId);
+					}				
+				});
 
-			//Socket
-			// socket.on('initiator_ready', function (data){
-			// 	peer.signal(data.rtcId);
-			// });
+				peer.on('stream', function (stream) {
+					console.log("VIDEO");
+					var video = document.querySelector('video');
+					video.src = window.URL.createObjectURL(stream);
+					video.play();
+				});
 
-			// peer.on('signal', function (data){
-			// 	socket.emit('set_webrtc_id', {
-			// 		rtcId: JSON.stringify(data)
-			// 	});
-			// });
+				peer.on('error', function (err) {
+					console.log('EEEEERROR!!');
+					console.log(err);
+				});
 
-			// peer.on('stream', function (stream){
-			// 	console.log("VIDEO");
-		 //    var video = document.createElement('video');
-		 //    document.body.appendChild(video);
+			}, function (err) {console.error(err)}
+			);
 
-		 //    video.src = window.URL.createObjectURL(stream);
-		 //    video.play();
-		 //  });
-
-		 //  peer.on('error', function (err){
-		 //  	console.log('EEEEERROR!!');
-		 //  	console.log(err);
-		 //  });
-		
-		}, function (err){
-		  console.error(err);
-		});
-	});
-
+});
 })(io, SimplePeer);

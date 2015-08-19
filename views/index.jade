@@ -1,11 +1,14 @@
 extend ./layout
 
 block content
-	h1 Mentorance
-	h1.lead This is my id: 
-		span= userId
-	p.
-		Jade is a terse and simple
-		templating language with a
-		strong focus on performance
-		and powerful features.
+	.text-center.jumbotron
+		h1 Mentorance
+		p Id: 
+			span= userId
+		p.
+			Jade is a terse and simple
+			templating language with a
+			strong focus on performance
+			and powerful features.
+		.embed-responsive.embed-responsive-4by3
+			video.embed-responsive-item

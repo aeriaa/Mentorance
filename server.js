@@ -6,40 +6,49 @@ var server  = require('http').createServer(app);
 var io      = require('socket.io')(server);
 var port    = process.env.PORT || 3000;
 
-// Singleton variables
-var connections = [];
-var webRtcIds   = [];
-
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 app.use(routes);
 
-io.on('connection', function (socket){
-	var initialized = false;
+// Singleton variables
+var connections = [];
+var webRtcIds   = [];
 
-	socket.on('initialize', function (){
+io.on('connection', function (socket) {
+
+	socket.on('initialize', function () {
 		connections.push(socket);
-		initialized = true;
-		console.log(socket);
+		console.log('Peers connected %s', connections.length);
 
-		socket.emit('webrtc_init', {
-			initiator: webRtcIds.length === 0
+		if (webRtcIds.length === 0) {
+			socket.emit('webrtc_init', {
+				initiator: webRtcIds.length === 0
+			});
+		} else {
+			socket.emit('webrtc_init', {
+				initiator: webRtcIds.length === 0,
+				signal: webRtcIds[0]
+			});
+		};
+
+		
+		socket.on('first_id_webrtc', function (data) {
+			webRtcIds.push(data.peerId);
+			console.log('webRtcIds %s', webRtcIds.length);
 		});
 
-		if (connections.length === 0) {
-			socket.emit('initiator_ready', {
-				rtcId: webRtcIds[0]
-			})
-		}
-	});
+		socket.on('second_id_webrtc', function (data) {
+			webRtcIds.push(data.peerId);
+			console.log('webRtcIds %s', webRtcIds.length);
+			socket.emit('peers_ready', [
+				{ peerId: webRtcIds[1] },
+				{ peerId: webRtcIds[0] }
+				]);
+		});
 
-	socket.on('set_webrtc_id', function (data){
-		console.log("Register id");
-		webRtcIds.push(data.rtcId);
-	});
+		socket.on('disconnect', function () {});
 
-	socket.on('disconnect', function (){
 	});
 });
 
