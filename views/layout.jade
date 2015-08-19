@@ -1,13 +1,21 @@
 doctype html
 html(lang="en")
-  head
-    title Test
+	head
+		title Mentorance
+		//- <!-- Latest compiled and minified CSS -->
+		link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css")
+		//- jQuery
+		script(src="//code.jquery.com/jquery-1.11.3.min.js")
+		//- <!-- Latest compiled and minified JavaScript -->
+		script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js")
 
-  body
-    .wrapper
-      block content
-  
-  //- Scripts
-  script(type='text/javascript' src='/socket.io/socket.io.js')
-  script(type='text/javascript' src='simplepeer.js')
-  script(type='text/javascript' src='test.js')
+		body
+			.container
+				.row
+					.col-md-12
+						block content
+
+		//- Scripts
+		script(type='text/javascript' src='/socket.io/socket.io.js')
+		script(type='text/javascript' src='simplepeer.js')
+		script(type='text/javascript' src='test.js')
