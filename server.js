@@ -19,33 +19,30 @@ io.on('connection', function (socket){
 
 	socket.on('initialize', function (){
 		connections.push(socket);
-		console.log('Peers connected %s', connections.length);
+		console.log('%s connected', connections.length);
 
 		if (webRtcIds.length === 0){
 			socket.emit('webrtc_init', {
-				initiator: webRtcIds.length === 0
+				initiator: true
 			});
-		} else {
+		} else if (webRtcIds.length === 1){
 			socket.emit('webrtc_init', {
-				initiator: webRtcIds.length === 0,
+				initiator: false,
 				signal: webRtcIds[0]
 			});
 		};
 		
-		socket.on('first_id_webrtc', function (data){
-			webRtcIds.push(data.peerId);
-			console.log('webRtcIds %s', webRtcIds.length);
+		socket.on('getting_id_1', function (data){
+			webRtcIds.push(data);
+			console.log('%s webRtcId created', webRtcIds.length);
+			socket.emit('setting_id_1', {signal: webRtcIds[1]});
 		});
 
-		socket.on('second_id_webrtc', function (data){
-			webRtcIds.push(data.peer2id);
-			console.log('webRtcIds %s', webRtcIds.length);
+		socket.on('getting_id_2', function (data){
+			webRtcIds.push(data);
+			console.log('%s webRtcId created', webRtcIds.length);
+			socket.emit('setting_id_2', {signal: webRtcIds[0]});
 		});
-
-		socket.emit('peers_ready', [
-			{ id: webRtcIds[0] },
-			{ id: webRtcIds[1] }
-		]);
 
 		socket.on('disconnect', function () {});
 

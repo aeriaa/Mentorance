@@ -4,7 +4,7 @@
 	socket.emit('initialize', {});
 
 	socket.on('webrtc_init', function (data){
-		console.log("Initiator", data.initiator ? 'Yes' : 'No');
+		console.log(data.initiator ? 'Initiator' : 'Second Peer');
 
 		navigator.webkitGetUserMedia({video: true, audio: true},
 			function (stream){
@@ -20,32 +20,42 @@
 						trickle: false,
 						stream: stream
 					});
-					peer.signal(JSON.parse(data.signal));
+					peer.signal(data.signal);
 				}
 
+				//Do what Alex told you, send the id 'on('signal')' through 
+				//socket.on and get it back through socket.emit
+
 				peer.on('signal', function (data){
-					var id = JSON.stringify(data);
 					if (peer.initiator) {
-						console.log("Peer 1");
-						socket.emit('first_id_webrtc', { peerId: id });
+						socket.emit('getting_id_1', data);
 					} else {
-						console.log("Peer 2");
-						socket.emit('second_id_webrtc', { peerId: id });
+						socket.emit('getting_id_2', data);
+					}
+					console.log(
+						peer.initiator ? 'Getting id 1' : 'Getting id 2');
+				});
+
+
+				socket.on('peer_ready', function (data){
+					if (peer.initiator){
+						peer.signal(data.signal));
+						console.log('Establishing signal connection');
+					} else {
+						peer.signal(JSON.parse(data.signal));
+						console.log('Peer signal established');
 					}
 				});
 
-				socket.on('peers_ready', function (data){
-					if (!peer.initiator){
-						console.log('Initiator id', data[0].id);
-						peer.signal(data[0].id);
-					}	else {
-						console.log('Peer id', data[1].id);
-						peer.signal(data[1].id);
-					}				
-				});
+				// peer.on('connect', function (data){
+				// });
+
+				// peer2.on('data', function (data){
+				// 	console.log('got a message from peer1: ' + data)
+				// });
 
 				peer.on('stream', function (stream){
-					console.log('Stream ready', stream);
+					console.log('Stream Ready!');
 					var video = document.querySelector('video');
 					video.src = window.URL.createObjectURL(stream);
 					video.play();
@@ -58,6 +68,5 @@
 
 			}, function (err){console.error(err)}
 			);
-
 });
 })(io, SimplePeer);
