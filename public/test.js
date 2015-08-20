@@ -4,7 +4,7 @@
 	socket.emit('initialize', {});
 
 	socket.on('webrtc_init', function (data){
-		console.log("initiator", data);
+		console.log("Initiator", data.initiator ? 'Yes' : 'No');
 
 		navigator.webkitGetUserMedia({video: true, audio: true},
 			function (stream){
@@ -14,7 +14,6 @@
 						trickle: false,
 						stream: stream
 					});
-					console.log("Initiator", peer.initiator);
 				} else {
 					var peer = new SimplePeer({
 						initiator: data.initiator,
@@ -22,32 +21,31 @@
 						stream: stream
 					});
 					peer.signal(JSON.parse(data.signal));
-					console.log("Initiator", peer.signal);
 				}
 
 				peer.on('signal', function (data){
+					var id = JSON.stringify(data);
 					if (peer.initiator) {
-						socket.emit('first_id_webrtc', {
-							peerId: JSON.stringify(data)
-						});
+						console.log("Peer 1");
+						socket.emit('first_id_webrtc', { peerId: id });
 					} else {
-						console.log("funciaon");
-						socket.emit('second_id_webrtc', {
-							peerId: JSON.stringify(data)
-						});
+						console.log("Peer 2");
+						socket.emit('second_id_webrtc', { peerId: id });
 					}
 				});
 
 				socket.on('peers_ready', function (data){
-					if (peer.initiator) {
-						peer.signal(data[0].peerId);
+					if (!peer.initiator){
+						console.log('Initiator id', data[0].id);
+						peer.signal(data[0].id);
 					}	else {
-						peer.signal(data[1].peerId);
+						console.log('Peer id', data[1].id);
+						peer.signal(data[1].id);
 					}				
 				});
 
 				peer.on('stream', function (stream){
-					console.log("VIDEO");
+					console.log('Stream ready', stream);
 					var video = document.querySelector('video');
 					video.src = window.URL.createObjectURL(stream);
 					video.play();

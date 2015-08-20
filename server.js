@@ -38,13 +38,14 @@ io.on('connection', function (socket){
 		});
 
 		socket.on('second_id_webrtc', function (data){
-			webRtcIds.push(data.peerId);
+			webRtcIds.push(data.peer2id);
 			console.log('webRtcIds %s', webRtcIds.length);
-			socket.emit('peers_ready', [
-				{ peerId: webRtcIds[1] },
-				{ peerId: webRtcIds[0] }
-				]);
 		});
+
+		socket.emit('peers_ready', [
+			{ id: webRtcIds[0] },
+			{ id: webRtcIds[1] }
+		]);
 
 		socket.on('disconnect', function () {});
 
