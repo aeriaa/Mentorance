@@ -15,13 +15,13 @@ app.use(routes);
 var connections = [];
 var webRtcIds   = [];
 
-io.on('connection', function (socket) {
+io.on('connection', function (socket){
 
-	socket.on('initialize', function () {
+	socket.on('initialize', function (){
 		connections.push(socket);
 		console.log('Peers connected %s', connections.length);
 
-		if (webRtcIds.length === 0) {
+		if (webRtcIds.length === 0){
 			socket.emit('webrtc_init', {
 				initiator: webRtcIds.length === 0
 			});
@@ -31,14 +31,13 @@ io.on('connection', function (socket) {
 				signal: webRtcIds[0]
 			});
 		};
-
 		
-		socket.on('first_id_webrtc', function (data) {
+		socket.on('first_id_webrtc', function (data){
 			webRtcIds.push(data.peerId);
 			console.log('webRtcIds %s', webRtcIds.length);
 		});
 
-		socket.on('second_id_webrtc', function (data) {
+		socket.on('second_id_webrtc', function (data){
 			webRtcIds.push(data.peerId);
 			console.log('webRtcIds %s', webRtcIds.length);
 			socket.emit('peers_ready', [
