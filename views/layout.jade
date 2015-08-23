@@ -4,18 +4,21 @@ html(lang="en")
 		title Mentorance
 		//- <!-- Latest compiled and minified CSS -->
 		link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css")
+
+		//- Google Fonts	
+		link(href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200,600,300italic|Inconsolata:400,700' rel='stylesheet' type='text/css')
 		//- jQuery
 		script(src="//code.jquery.com/jquery-1.11.3.min.js")
 		//- <!-- Latest compiled and minified JavaScript -->
 		script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js")
 		meta(name="viewport" content="width=device-width, initial-scale=1")
-
+		//- CSS
+		link(href='/css/style.css', rel='stylesheet')
+		
 		body
-			.container
-				.row
-					block content
-
+			block content
 		//- Scripts
 		script(type='text/javascript' src='/socket.io/socket.io.js')
 		script(type='text/javascript' src='simplepeer.js')
 		script(type='text/javascript' src='test.js')
+		script(type='text/javascript' src='chat.js')

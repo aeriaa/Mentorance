@@ -1,72 +1,50 @@
 (function (io, SimplePeer){
 	var socket = io();
+	console.log('initializing.');
 
 	socket.emit('initialize', {});
+	console.log('initializing..');
 
 	socket.on('webrtc_init', function (data){
-		console.log(data.initiator ? 'Initiator' : 'Second Peer');
+		console.log('initializing...');
 
-		navigator.webkitGetUserMedia({video: true, audio: true},
-			function (stream){
-				if (data.initiator) {
-					var peer = new SimplePeer({
-						initiator: data.initiator,
-						trickle: false,
-						stream: stream
-					});
-				} else {
-					var peer = new SimplePeer({
-						initiator: data.initiator,
-						trickle: false,
-						stream: stream
-					});
-					peer.signal(data.signal);
-				}
+		// navigator.webkitGetUserMedia({video: true, audio: true},
+		// 	function (stream){
+		// 		var peer 		= new SimplePeer({
+		// 			initiator: 	data.initiator,
+		// 			trickle: 		false,
+		// 			stream: 		stream
+		// 		});
+		// 		console.log(peer.initiator ? 'Initiator' : 'Second Peer');
 
-				//Do what Alex told you, send the id 'on('signal')' through 
-				//socket.on and get it back through socket.emit
+		// 		peer.on('signal', function (data){
+		// 			socket.emit('getting_signal', data);
+		// 			console.log('getting signal');
+		// 		});
 
-				peer.on('signal', function (data){
-					if (peer.initiator) {
-						socket.emit('getting_id_1', data);
-					} else {
-						socket.emit('getting_id_2', data);
-					}
-					console.log(
-						peer.initiator ? 'Getting id 1' : 'Getting id 2');
-				});
+		// 		socket.on('setting_signal_2', function (data){
+		// 			peer.signal(data);
+		// 			console.log('Peer 2 ready');
+		// 		});
 
+		// 		socket.on('setting_signal_1', function (data){
+		// 			peer.signal(data);
+		// 			console.log('Peer 1 ready');
+		// 		});
 
-				socket.on('peer_ready', function (data){
-					if (peer.initiator){
-						peer.signal(data.signal));
-						console.log('Establishing signal connection');
-					} else {
-						peer.signal(JSON.parse(data.signal));
-						console.log('Peer signal established');
-					}
-				});
+		// 		peer.on('stream', function (stream){
+		// 			var video = document.querySelector('video');
+		// 			video.src = window.URL.createObjectURL(stream);
+		// 			video.play();
+		// 			console.log('Video Streaming');
+		// 		});
 
-				// peer.on('connect', function (data){
-				// });
+		// 		peer.on('error', function (err){
+		// 			console.log('EEEEERROR!!');
+		// 			console.log(err);
+		// 		});
 
-				// peer2.on('data', function (data){
-				// 	console.log('got a message from peer1: ' + data)
-				// });
-
-				peer.on('stream', function (stream){
-					console.log('Stream Ready!');
-					var video = document.querySelector('video');
-					video.src = window.URL.createObjectURL(stream);
-					video.play();
-				});
-
-				peer.on('error', function (err){
-					console.log('EEEEERROR!!');
-					console.log(err);
-				});
-
-			}, function (err){console.error(err)}
-			);
+		// 	}, function (err){console.error(err)}
+		// 	);
 });
 })(io, SimplePeer);

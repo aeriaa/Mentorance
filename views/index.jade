@@ -1,9 +1,23 @@
 extend ./layout
 
 block content
-	.text-center.jumbotron
-		h1 Mentorance
-		p Id: 
-			span= userId
-		.embed-responsive.embed-responsive-4by3
-			video.embed-responsive-item
+	//- .embed-responsive.embed-responsive-4by3
+	//- video.embed-responsive-item
+
+	//- Chat
+	ul.pages
+		li.chat.page
+			.chatArea
+				ul.messages
+				input(class="inputMessage" 
+							placeholder="Just type and press 'Enter' to send")
+		li.login.page
+			.form
+				h1.text-center.brand Mentorance
+				br
+				h3.title What's your name?
+				input(class="usernameInput" 
+							type="text" 
+							maxlength="14")
+
+	

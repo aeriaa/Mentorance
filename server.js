@@ -2,9 +2,9 @@ var express = require('express');
 var routes  = require('./routes');
 
 var app     = express();
-var server  = require('http').createServer(app);
+var server 	= require('http').createServer(app);
 var io      = require('socket.io')(server);
-var port    = process.env.PORT || 3000;
+var port  	= process.env.PORT || 3000;
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -12,41 +12,66 @@ app.use(express.static(__dirname + '/public'));
 app.use(routes);
 
 // Singleton variables
-var connections = [];
 var webRtcIds   = [];
+var usernames 	= {};
+var numUsers		= 0;
 
-io.on('connection', function (socket){
+io.on('connection', function (socket) {
+  var addedUser = false;
 
-	socket.on('initialize', function (){
-		connections.push(socket);
-		console.log('%s connected', connections.length);
+  // when the client emits 'new message', this listens and executes
+  socket.on('new message', function (data) {
+    // we tell the client to execute 'new message'
+    socket.broadcast.emit('new message', {
+      username: socket.username,
+      message: data
+    });
+  });
 
-		if (webRtcIds.length === 0){
-			socket.emit('webrtc_init', {
-				initiator: true
-			});
-		} else if (webRtcIds.length === 1){
-			socket.emit('webrtc_init', {
-				initiator: false,
-				signal: webRtcIds[0]
-			});
-		};
-		
-		socket.on('getting_id_1', function (data){
-			webRtcIds.push(data);
-			console.log('%s webRtcId created', webRtcIds.length);
-			socket.emit('setting_id_1', {signal: webRtcIds[1]});
-		});
+// This will help to get the users connected SimplePeer
+  // when the client emits 'add user', this listens and executes
+  socket.on('add user', function (username) {
+    // we store the username in the socket session for this client
+    socket.username = username;
+    // add the client's username to the global list
+    usernames[username] = username;
+    ++numUsers;
+    addedUser = true;
+    socket.emit('login', {
+      numUsers: numUsers
+    });
+    // echo globally (all clients) that a person has connected
+    socket.broadcast.emit('user joined', {
+      username: socket.username,
+      numUsers: numUsers
+    });
+  });
 
-		socket.on('getting_id_2', function (data){
-			webRtcIds.push(data);
-			console.log('%s webRtcId created', webRtcIds.length);
-			socket.emit('setting_id_2', {signal: webRtcIds[0]});
-		});
+  socket.on('typing', function () {
+    socket.broadcast.emit('typing', {
+      username: socket.username
+    });
+  });
 
-		socket.on('disconnect', function () {});
+  socket.on('stop typing', function () {
+    socket.broadcast.emit('stop typing', {
+      username: socket.username
+    });
+  });
 
-	});
+  socket.on('disconnect', function () {
+    // remove the username from global usernames list
+    if (addedUser) {
+      delete usernames[socket.username];
+      --numUsers;
+
+      // echo globally that this client has left
+      socket.broadcast.emit('user left', {
+        username: socket.username,
+        numUsers: numUsers
+      });
+    }
+  });
 });
 
 server.listen(port);
