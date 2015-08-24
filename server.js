@@ -12,11 +12,11 @@ app.use(express.static(__dirname + '/public'));
 app.use(routes);
 
 // Singleton variables
-var webRtcIds   = [];
 var usernames 	= {};
 var numUsers		= 0;
 
 io.on('connection', function (socket) {
+// Chat Sockets
   var addedUser = false;
 
   // when the client emits 'new message', this listens and executes
@@ -45,6 +45,7 @@ io.on('connection', function (socket) {
       username: socket.username,
       numUsers: numUsers
     });
+    console.log(socket.username + " connected");
   });
 
   socket.on('typing', function () {
@@ -70,8 +71,49 @@ io.on('connection', function (socket) {
         username: socket.username,
         numUsers: numUsers
       });
+      console.log(socket.username + ' disconnected');
     }
   });
+// End of Chat Sockets
+
+
+// Example
+
+// io.on('connection', function(socket){
+//     socket.on('set nickname', function (name) {
+//         sockets[name] = socket;
+//     });
+//     socket.on('send message', function (message, to) {
+//         sockets[to].emit(message);
+//     });
+// });
+
+//Video Sockets
+  socket.on('set_as_initiator', function (username) {
+    socket[username].emit('start_call', {
+      initiator: true
+    });
+    console.log('Setting as initiator');
+  });
+
+  socket.on('signal', function (signal) {
+    socket.broadcast.emit('start_call', {
+      signal: signal
+    });
+  });
+
+  socket.on('', function (signal){
+    socket.broadcast.emit('', {
+      username: socket.username,
+      signal: socket.signal
+    });
+  });
+
+  socket.on('getting_signal', function (data){
+
+  });
+//End of Video Sockets
+
 });
 
 server.listen(port);

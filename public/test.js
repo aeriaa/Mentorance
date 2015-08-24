@@ -1,50 +1,47 @@
-(function (io, SimplePeer){
-	var socket = io();
-	console.log('initializing.');
+(function (SimplePeer){
+	// Initialize variables
+  var socket 				 = io();
+  var $chatPage  		 = $('.chat.page');
+  var $videoPage 		 = $('.video.page');
+  var $inputMessage  = $('.inputMessage');
+  var $currentInput  = $('.currentInput');
+  var $usernameInput = $('.usernameInput');
 
-	socket.emit('initialize', {});
-	console.log('initializing..');
+  // SimplePeer
+  socket.on('start_call', function (data) {
+		navigator.webkitGetUserMedia({video: true, audio: true},
+			function (stream) {
+				var peer 		= new SimplePeer({
+					initiator: 	data.initiator,
+					trickle: 		false,
+					stream: 		stream
+				});
+				console.log(peer.initiator ? 'Initiator' : 'Second Peer');
+			}, function (err){console.error(err)}
+		);
 
-	socket.on('webrtc_init', function (data){
-		console.log('initializing...');
+		peer.on('signal', function (data) {
+			socket.emit('getting_signal', data);
+			console.log('getting signal', data);
+		});
 
-		// navigator.webkitGetUserMedia({video: true, audio: true},
-		// 	function (stream){
-		// 		var peer 		= new SimplePeer({
-		// 			initiator: 	data.initiator,
-		// 			trickle: 		false,
-		// 			stream: 		stream
-		// 		});
-		// 		console.log(peer.initiator ? 'Initiator' : 'Second Peer');
+		socket.on('setting_signal', function (signal) {
+			peer.signal(signal);
+			console.log('setting_signal');
+		});
 
-		// 		peer.on('signal', function (data){
-		// 			socket.emit('getting_signal', data);
-		// 			console.log('getting signal');
-		// 		});
+		peer.on('stream', function (stream) {
+			var video = document.querySelector('video');
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+			console.log('Video Streaming');
+		});
 
-		// 		socket.on('setting_signal_2', function (data){
-		// 			peer.signal(data);
-		// 			console.log('Peer 2 ready');
-		// 		});
+		peer.on('error', function (err) {
+			console.log('ERROR', err);
+		});
+  });
 
-		// 		socket.on('setting_signal_1', function (data){
-		// 			peer.signal(data);
-		// 			console.log('Peer 1 ready');
-		// 		});
+  //Getting the call action
 
-		// 		peer.on('stream', function (stream){
-		// 			var video = document.querySelector('video');
-		// 			video.src = window.URL.createObjectURL(stream);
-		// 			video.play();
-		// 			console.log('Video Streaming');
-		// 		});
-
-		// 		peer.on('error', function (err){
-		// 			console.log('EEEEERROR!!');
-		// 			console.log(err);
-		// 		});
-
-		// 	}, function (err){console.error(err)}
-		// 	);
-});
-})(io, SimplePeer);
+})(SimplePeer);

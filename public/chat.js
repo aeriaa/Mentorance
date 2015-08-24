@@ -26,9 +26,9 @@ $(function() {
   var lastTypingTime;
 
   //On initialization
-  $brand.hide().fadeIn(900);
-  $title.hide().fadeIn(1800);
-  $usernameInput.hide().fadeIn(2700);
+  $brand.fadeIn(1800);
+  $title.fadeIn(2700);
+  $usernameInput.hide().fadeIn(3600);
 
 
   function addParticipantsMessage (data) {
@@ -231,7 +231,7 @@ $(function() {
   socket.on('login', function (data) {
     connected = true;
     // Display the welcome message
-    var message = "<strong class='lead'>Mentorance</strong> - v.$.0.1";
+    var message = "<strong class='lead'>Mentorance</strong> - <strong>v.$.0.1";
     log(message, {
       prepend: true
     });

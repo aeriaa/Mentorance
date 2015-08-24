@@ -1,16 +1,14 @@
 extend ./layout
 
 block content
-	//- .embed-responsive.embed-responsive-4by3
-	//- video.embed-responsive-item
-
-	//- Chat
 	ul.pages
+		//- Chat
 		li.chat.page
 			.chatArea
 				ul.messages
 				input(class="inputMessage" 
-							placeholder="Just type and press 'Enter' to send")
+							placeholder="Just type... Press 'Enter' to Send")
+		//- Login 
 		li.login.page
 			.form
 				h1.text-center.brand Mentorance
@@ -19,5 +17,8 @@ block content
 				input(class="usernameInput" 
 							type="text" 
 							maxlength="14")
+		//- Video
+		li.video.page.embed-responsive.embed-responsive-4by3
+			video.embed-responsive-item
 
 	
