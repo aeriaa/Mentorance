@@ -1,29 +1,33 @@
 $(function() {
 
-  var FADE_TIME 					= 600;
+  var FADE_TIME           = 600;
   var TYPING_TIMER_LENGTH = 400;
-  var COLORS 							= [
+  var COLORS              = [
     '#9b59b6', '#3498db', '#2ecc71', '#1abc9c',
     '#f1c40f', '#2980b9', '#27ae60', '#16a085',
     '#c0392b', '#f39c12', '#e74c3c', '#e67e22'
   ];
 
+  // Read simplepeer
+  var SimplePeer = window.SimplePeer;
+
   // Initialize variables
-  var socket 				 = io();
-  var $title 				 = $('.title');
-  var $brand 				 = $('.brand');
+  var socket         = io();
+  var $title         = $('.title');
+  var $brand         = $('.brand');
   var $usernameInput = $('.usernameInput');
-  var $messages 		 = $('.messages');
+  var $messages      = $('.messages');
   var $inputMessage  = $('.inputMessage');
-  var $loginPage 	 	 = $('.login.page'); 
-  var $chatPage  		 = $('.chat.page');
+  var $loginPage     = $('.login.page');
+  var $chatPage      = $('.chat.page');
 
   // Prompt for setting a user name
   var username;
-  var connected 		= false;
-  var typing 				= false;
+  var connected     = false;
+  var typing         = false;
   var $currentInput = $usernameInput.focus();
   var lastTypingTime;
+  var peer;
 
   //On initialization
   $brand.fadeIn(1800);
@@ -57,18 +61,70 @@ $(function() {
   }
 
   function sendMessage () {
-    var message = $inputMessage.val();
     // Prevent markup from being injected into the message
-    message = cleanInput(message);
+    var message = cleanInput($inputMessage.val());
+    var action  = getActionFromMessage(message);
+    var target  = getTargetFromMessage(message);
+    var actionF = actions[action] || actions.message;
+
     // if there is a non-empty message and a socket connection
     if (message && connected) {
       $inputMessage.val('');
-      addChatMessage({
-        username: username,
-        message: message
-      });
-      socket.emit('new message', message);
+      actionF(username, message, target);
     }
+  }
+
+  var actions = {
+    message: function(username, message) {
+      socket.emit('new message', message);
+      addChatMessage({
+        message: message,
+        username: username,
+      });
+    },
+
+    call: function(username, message, target) {
+      navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
+        peer = new SimplePeer({
+          initiator: true,
+          trickle:   false,
+          stream:    stream,
+        });
+
+        peer.on('stream', onPeerStream);
+        peer.on('signal', function(data) {
+          console.log('He creado la conexion, lanzo call hacia', target);
+          socket.emit('call', {
+            signal: data,
+            target: target,
+          });
+        });
+
+        peer.on('error', onPeerError);
+      },
+
+      function(err) {
+        console.error(err);
+      });
+    },
+  };
+
+  function onPeerError(error) {
+    console.error('Peer error', error);
+  }
+
+  // TODO Use regex to do this
+  function getActionFromMessage(message) {
+    try {
+      return message.split('.')[1].split('(')[0];
+    }
+    catch (e) {
+      return false;
+    }
+  }
+
+  function getTargetFromMessage(message) {
+    return message.split('.')[0] || false;
   }
 
   // Log a message
@@ -86,7 +142,7 @@ $(function() {
       $typingMessages.remove();
     }
 
-    var $usernameDiv 	 	= $('<span class="username"/>')
+    var $usernameDiv      = $('<span class="username"/>')
       .text(data.username)
       .css('color', getUsernameColor(data.username));
     var $messageBodyDiv = $('<span class="messageBody">')
@@ -264,5 +320,46 @@ $(function() {
   // Whenever the server emits 'stop typing', kill the typing message
   socket.on('stop typing', function (data) {
     removeChatTyping(data);
+  });
+
+
+  function onPeerStream(stream) {
+    //LEFT HERE, FADE IN THE CHAT AND POP THE VIDEO.
+    var video = document.querySelector('video');
+    video.src = window.URL.createObjectURL(stream);
+    video.play();
+    console.log('Video streaming');
+  }
+
+  socket.on('called', function(data) {
+    navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
+      peer = new SimplePeer({
+        initiator: false,
+        trickle:   false,
+        stream:    stream,
+      });
+
+      peer.signal(data.signal);
+
+      peer.on('signal', function(signal) {
+        console.log('Ya tengo mi signal, envio respuesta a', data.username);
+        socket.emit('call_responded', {
+          signal:   signal,
+          username: data.username
+        });
+      });
+
+      peer.on('stream', onPeerStream);
+      peer.on('error', onPeerError);
+    },
+
+    function(err) {
+      console.error(err);
+    });
+  });
+
+  socket.on('call_start', function(data) {
+    console.log('Me ha contestado', data.username);
+    peer.signal(data.signal);
   });
 });

@@ -2,9 +2,9 @@ var express = require('express');
 var routes  = require('./routes');
 
 var app     = express();
-var server 	= require('http').createServer(app);
+var server  = require('http').createServer(app);
 var io      = require('socket.io')(server);
-var port  	= process.env.PORT || 3000;
+var port    = process.env.PORT || 3000;
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -12,8 +12,9 @@ app.use(express.static(__dirname + '/public'));
 app.use(routes);
 
 // Singleton variables
-var usernames 	= {};
-var numUsers		= 0;
+var usernames   = {};
+var numUsers    = 0;
+var sockets     = {};
 
 io.on('connection', function (socket) {
 // Chat Sockets
@@ -28,12 +29,27 @@ io.on('connection', function (socket) {
     });
   });
 
-// This will help to get the users connected SimplePeer
-  // when the client emits 'add user', this listens and executes
+  socket.on('call', function(data) {
+    sockets[data.target].emit('called', {
+      username: socket.username,
+      signal: data.signal,
+    });
+  });
+
+  socket.on('call_responded', function(data) {
+    console.log('Emito call start hacia ', data.username);
+    sockets[data.username].emit('call_start', {
+      signal: data.signal,
+      username: socket.username,
+    });
+  });
+
   socket.on('add user', function (username) {
-    // we store the username in the socket session for this client
+  // we store the username in the socket session for this client
     socket.username = username;
-    // add the client's username to the global list
+  // we store the socket info the socket session for this client
+    sockets[username] = socket;
+  // add the client's username to the global list
     usernames[username] = username;
     ++numUsers;
     addedUser = true;
@@ -74,23 +90,10 @@ io.on('connection', function (socket) {
       console.log(socket.username + ' disconnected');
     }
   });
-// End of Chat Sockets
-
-
-// Example
-
-// io.on('connection', function(socket){
-//     socket.on('set nickname', function (name) {
-//         sockets[name] = socket;
-//     });
-//     socket.on('send message', function (message, to) {
-//         sockets[to].emit(message);
-//     });
-// });
 
 //Video Sockets
   socket.on('set_as_initiator', function (username) {
-    socket[username].emit('start_call', {
+    sockets[username].emit('start_call', {
       initiator: true
     });
     console.log('Setting as initiator');
@@ -101,18 +104,6 @@ io.on('connection', function (socket) {
       signal: signal
     });
   });
-
-  socket.on('', function (signal){
-    socket.broadcast.emit('', {
-      username: socket.username,
-      signal: socket.signal
-    });
-  });
-
-  socket.on('getting_signal', function (data){
-
-  });
-//End of Video Sockets
 
 });
 
