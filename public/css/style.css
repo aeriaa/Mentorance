@@ -101,7 +101,9 @@ ul {
 
 /* Video page */
 .video.page {
+	background: #141414;
 	display: none;
+	color: white;
 }
 
 /* Font */

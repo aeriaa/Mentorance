@@ -19,28 +19,12 @@ var sockets     = {};
 io.on('connection', function (socket) {
 // Chat Sockets
   var addedUser = false;
-
   // when the client emits 'new message', this listens and executes
   socket.on('new message', function (data) {
     // we tell the client to execute 'new message'
     socket.broadcast.emit('new message', {
       username: socket.username,
       message: data
-    });
-  });
-
-  socket.on('call', function(data) {
-    sockets[data.target].emit('called', {
-      username: socket.username,
-      signal: data.signal,
-    });
-  });
-
-  socket.on('call_responded', function(data) {
-    console.log('Emito call start hacia ', data.username);
-    sockets[data.username].emit('call_start', {
-      signal: data.signal,
-      username: socket.username,
     });
   });
 
@@ -51,6 +35,7 @@ io.on('connection', function (socket) {
     sockets[username] = socket;
   // add the client's username to the global list
     usernames[username] = username;
+
     ++numUsers;
     addedUser = true;
     socket.emit('login', {
@@ -59,9 +44,9 @@ io.on('connection', function (socket) {
     // echo globally (all clients) that a person has connected
     socket.broadcast.emit('user joined', {
       username: socket.username,
-      numUsers: numUsers
+      numUsers: numUsers,
     });
-    console.log(socket.username + " connected");
+    console.log("%s connected", socket.username);
   });
 
   socket.on('typing', function () {
@@ -87,21 +72,24 @@ io.on('connection', function (socket) {
         username: socket.username,
         numUsers: numUsers
       });
-      console.log(socket.username + ' disconnected');
+      console.log('%s disconnected', socket.username);
     }
   });
 
 //Video Sockets
-  socket.on('set_as_initiator', function (username) {
-    sockets[username].emit('start_call', {
-      initiator: true
+  socket.on('call', function(data) {
+    sockets[data.target].emit('calling', {
+      initiator: socket.username,
+      signal: data.signal,
     });
-    console.log('Setting as initiator');
   });
 
-  socket.on('signal', function (signal) {
-    socket.broadcast.emit('start_call', {
-      signal: signal
+  socket.on('call_accepted', function(data) {
+    console.log("%s's call accepted", data.username);
+    sockets[data.username].emit('call_connected', {
+      signal: data.signal,
+    //socket.username is the emitter of call accepted
+      username: socket.username,
     });
   });
 

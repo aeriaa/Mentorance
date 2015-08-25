@@ -20,12 +20,13 @@ $(function() {
   var $inputMessage  = $('.inputMessage');
   var $loginPage     = $('.login.page');
   var $chatPage      = $('.chat.page');
+  var $videoPage     = $('.video.page');
 
   // Prompt for setting a user name
   var username;
-  var connected     = false;
+  var connected      = false;
   var typing         = false;
-  var $currentInput = $usernameInput.focus();
+  var $currentInput  = $usernameInput.focus();
   var lastTypingTime;
   var peer;
 
@@ -47,14 +48,14 @@ $(function() {
 
   function setUsername () {
     username = cleanInput($usernameInput.val().trim());
-    username = "$" + username;
+
     // If the user name is valid
     if (username) {
       $loginPage.fadeOut(600); //on "Mdisconnect" loginPage.fadeIn();
       $chatPage.fadeIn(3000); //on "Mdisconnect" chatPage.hide();
       $loginPage.off('click');
       $currentInput = $inputMessage.focus();
-
+      username = "$" + username;
       // Tell the server your user name
       socket.emit('add user', username);
     }
@@ -84,29 +85,34 @@ $(function() {
     },
 
     call: function(username, message, target) {
-      navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
-        peer = new SimplePeer({
-          initiator: true,
-          trickle:   false,
-          stream:    stream,
-        });
-
-        peer.on('stream', onPeerStream);
-        peer.on('signal', function(data) {
-          console.log('He creado la conexion, lanzo call hacia', target);
-          socket.emit('call', {
-            signal: data,
-            target: target,
+      navigator.webkitGetUserMedia({ video: true, audio: true }, 
+        function(stream) {
+          peer = new SimplePeer({
+            initiator: true,
+            trickle:   false,
+            stream:    stream,
           });
-        });
 
-        peer.on('error', onPeerError);
-      },
+          peer.on('signal', function (data) {
+            console.log('You are calling %s...', target);
+            socket.emit('call', {
+              signal: data,
+              target: target,
+            });
+          });
 
-      function(err) {
-        console.error(err);
-      });
+          peer.on('stream', onPeerStream);
+          peer.on('error', onPeerError);
+
+        },
+
+        function (err) {
+          console.error(err);
+        }
+      );
     },
+    //LEFT HERE, working on the actions commands a user can make
+
   };
 
   function onPeerError(error) {
@@ -127,6 +133,10 @@ $(function() {
     return message.split('.')[0] || false;
   }
 
+  // TODO - Check if user exists and is connected.
+
+
+
   // Log a message
   function log (message, options) {
     var $el = $('<li>').addClass('log').html(message);
@@ -142,7 +152,7 @@ $(function() {
       $typingMessages.remove();
     }
 
-    var $usernameDiv      = $('<span class="username"/>')
+    var $usernameDiv    = $('<span class="username"/>')
       .text(data.username)
       .css('color', getUsernameColor(data.username));
     var $messageBodyDiv = $('<span class="messageBody">')
@@ -245,7 +255,7 @@ $(function() {
     return COLORS[index];
   }
 
-  // Keyboard events
+// Keyboard events
 
   $(window).keydown(function (event) {
     // Auto-focus the current input when a key is typed
@@ -269,7 +279,7 @@ $(function() {
     updateTyping();
   });
 
-  // Click events
+// Click events
 
   // Focus input when clicking anywhere on login page
   $loginPage.click(function () {
@@ -281,7 +291,7 @@ $(function() {
     $inputMessage.focus();
   });
 
-  // Socket events
+// Socket events
 
   // Whenever the server emits 'login', log the login message
   socket.on('login', function (data) {
@@ -321,45 +331,96 @@ $(function() {
   socket.on('stop typing', function (data) {
     removeChatTyping(data);
   });
+  
 
+//Video events
 
   function onPeerStream(stream) {
-    //LEFT HERE, FADE IN THE CHAT AND POP THE VIDEO.
-    var video = document.querySelector('video');
-    video.src = window.URL.createObjectURL(stream);
+    console.log('To disconnect, call "$disconnect"');
+    $chatPage.fadeOut(600);
+    $videoPage.fadeIn(3000);
+    window.stream   = stream;
+    var video       = document.querySelector('video');
+    video.src       = window.URL.createObjectURL(stream);
     video.play();
-    console.log('Video streaming');
+
+    //TODO - To be called on pressing enter === 13
+    $inputMessage.on('input', function (){
+      if ($inputMessage.val() === '$disconnect') {
+        console.log('Disconnecting call...')
+        videoOff();
+      }; 
+
+      if ($inputMessage.val() === '$video') {
+        displayVideo();
+      };
+    });
+
+    function videoOff() {
+      video.pause();
+      video.src = "";
+      window.stream.stop();
+    }
+
+    //TODO - To be called on pressing ctrl + c
+    $(window).keypress(function (event) {
+    console.log('Press "C" to go back to the Chat');
+    //Audio connection will still be ON, going to chat
+      if (event.keyCode === 67) {
+        displayChat();
+        console.log('Call "$video" to get back to the Call');
+      }
+    });
+
+    console.log('Ready to video stream.');
   }
 
-  socket.on('called', function(data) {
-    navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
-      peer = new SimplePeer({
-        initiator: false,
-        trickle:   false,
-        stream:    stream,
-      });
+  function displayChat() {
+    $inputMessage.val('');
+    $videoPage.fadeOut(600);
+    $chatPage.fadeIn(3000);
+  }
 
-      peer.signal(data.signal);
+  function displayVideo() {
+    $chatPage.fadeOut(600);
+    $videoPage.fadeIn(3000);
+  }
 
-      peer.on('signal', function(signal) {
-        console.log('Ya tengo mi signal, envio respuesta a', data.username);
-        socket.emit('call_responded', {
-          signal:   signal,
-          username: data.username
+
+//Peer been called initiator: false,
+  socket.on('calling', function (data) {
+    navigator.webkitGetUserMedia({ video: true, audio: true }, 
+      function(stream) {
+        peer = new SimplePeer({
+          initiator: false,
+          trickle:   false,
+          stream:    stream,
         });
-      });
+      //This gives the second peer the signal to emit
+        peer.signal(data.signal);
 
-      peer.on('stream', onPeerStream);
-      peer.on('error', onPeerError);
-    },
+        peer.on('signal', function (signal) {
+          console.log("%s's call accepted", data.initiator);
+          socket.emit('call_accepted', {
+            signal:   signal,
+            username: data.initiator,
+          });
+        });
+
+        peer.on('stream', onPeerStream);
+        peer.on('error', onPeerError);
+
+      },
 
     function(err) {
       console.error(err);
     });
+
   });
 
-  socket.on('call_start', function(data) {
-    console.log('Me ha contestado', data.username);
+  socket.on('call_connected', function (data) {
+    console.log('Connection established with', data.username);
     peer.signal(data.signal);
   });
+
 });

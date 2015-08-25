@@ -1,24 +1,22 @@
 extend ./layout
 
 block content
-	ul.pages
-		//- Chat
-		li.chat.page
-			.chatArea
-				ul.messages
-				input(class="inputMessage" 
-							placeholder="Just type... Press 'Enter' to Send")
-		//- Login 
-		li.login.page
-			.form
-				h1.text-center.brand Mentorance
-				br
-				h3.title What's your name?
-				input(class="usernameInput" 
-							type="text" 
-							maxlength="14")
-		//- Video
-		li.video.page.embed-responsive.embed-responsive-4by3
-			video.embed-responsive-item
-
-	
+  ul.pages
+    //- Chat
+    li.chat.page
+      .chatArea
+        ul.messages
+        input(class="inputMessage" 
+              placeholder="Just type... Press 'Enter' to Send")
+    //- Login 
+    li.login.page
+      .form
+        h1.text-center.brand Mentorance
+        br
+        h3.title What's your name?
+        input(class="usernameInput" 
+              type="text" 
+              maxlength="14")
+    //- Video
+    li.video.page.embed-responsive.embed-responsive-4by3
+      video.embed-responsive-item
