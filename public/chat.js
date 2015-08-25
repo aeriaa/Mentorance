@@ -21,6 +21,7 @@ $(function() {
   var $loginPage     = $('.login.page');
   var $chatPage      = $('.chat.page');
   var $videoPage     = $('.video.page');
+  var $blackPage     = $('.black.page');
 
   // Prompt for setting a user name
   var username;
@@ -31,10 +32,13 @@ $(function() {
   var peer;
 
   //On initialization
-  $brand.fadeIn(1800);
-  $title.fadeIn(2700);
-  $usernameInput.hide().fadeIn(3600);
+  function displayLogin () {
+    $brand.fadeIn(1800);
+    $title.fadeIn(2700);
+    $usernameInput.hide().fadeIn(3600);
+  };
 
+  displayLogin();
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -44,7 +48,7 @@ $(function() {
       message += "<strong>" + data.numUsers + "</strong> users connected";
     }
     log(message);
-  }
+  };
 
   function setUsername () {
     username = cleanInput($usernameInput.val().trim());
@@ -55,25 +59,24 @@ $(function() {
       $chatPage.fadeIn(3000); //on "Mdisconnect" chatPage.hide();
       $loginPage.off('click');
       $currentInput = $inputMessage.focus();
-      username = "$" + username;
+      username      = "$" + username;
       // Tell the server your user name
       socket.emit('add user', username);
     }
-  }
+  };
 
-  function sendMessage () {
+  function sendMessage() {
     // Prevent markup from being injected into the message
     var message = cleanInput($inputMessage.val());
     var action  = getActionFromMessage(message);
     var target  = getTargetFromMessage(message);
     var actionF = actions[action] || actions.message;
-
     // if there is a non-empty message and a socket connection
     if (message && connected) {
       $inputMessage.val('');
       actionF(username, message, target);
     }
-  }
+  };
 
   var actions = {
     message: function(username, message) {
@@ -104,15 +107,19 @@ $(function() {
           peer.on('stream', onPeerStream);
           peer.on('error', onPeerError);
 
-        },
-
+        }, 
         function (err) {
           console.error(err);
         }
       );
     },
-    //LEFT HERE, working on the actions commands a user can make
 
+    //LEFT HERE, working on the actions commands a user can make 
+    exit: function(username) {
+      $blackPage.fadeIn(300, function(){
+        location.reload();
+      });
+    },
   };
 
   function onPeerError(error) {
@@ -122,9 +129,13 @@ $(function() {
   // TODO Use regex to do this
   function getActionFromMessage(message) {
     try {
+      if (message[0] === "$" && message[1] === 'e') {
+        return message.split('$')[1];
+        console.log(message.split('$')[1]);
+      }
       return message.split('.')[1].split('(')[0];
     }
-    catch (e) {
+    catch (err) {
       return false;
     }
   }
@@ -136,9 +147,8 @@ $(function() {
   // TODO - Check if user exists and is connected.
 
 
-
   // Log a message
-  function log (message, options) {
+  function log(message, options) {
     var $el = $('<li>').addClass('log').html(message);
     addMessageElement($el, options);
   }
@@ -297,10 +307,10 @@ $(function() {
   socket.on('login', function (data) {
     connected = true;
     // Display the welcome message
-    var message = "<strong class='lead'>Mentorance</strong> - <strong>v.$.0.1";
-    log(message, {
-      prepend: true
-    });
+    var message = "<span>Welcome to </span>"
+    message    += "<span class='lead'>Mentorance - ";
+    message    += "<strong>" + data.username + "</strong>";
+    log(message, { prepend: true });
     addParticipantsMessage(data);
   });
 
@@ -331,7 +341,7 @@ $(function() {
   socket.on('stop typing', function (data) {
     removeChatTyping(data);
   });
-  
+
 
 //Video events
 
@@ -362,7 +372,6 @@ $(function() {
       window.stream.stop();
     }
 
-    //TODO - To be called on pressing ctrl + c
     $(window).keypress(function (event) {
     console.log('Press "C" to go back to the Chat');
     //Audio connection will still be ON, going to chat
@@ -386,6 +395,7 @@ $(function() {
     $videoPage.fadeIn(3000);
   }
 
+// TODO - Allow private messaging
 
 //Peer been called initiator: false,
   socket.on('calling', function (data) {

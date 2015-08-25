@@ -56,6 +56,11 @@ ul {
 	background-color: #141414;
 }
 
+.black.page {
+	display: none;
+	background-color: #141414;
+}
+
 .login.page .form {
 	height: 100px;
 	margin-top: -100px;
