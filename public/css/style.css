@@ -129,7 +129,7 @@ ul {
 
 .inputMessage {
 	font-family: "Helvetica Neue";
-	font-size: 100%;
+	font-size: 150%;
 }
 
 .log {
@@ -156,10 +156,16 @@ ul {
 	color: gray;
 }
 
+.messageBody {
+	font-size: 80%;
+}
+
 .username {
-	font-family: "Inconsolata";
+	font-family: "Inconsolata",
+							 "Helvetica Neue", 
+							 "Helvetica";
 	float: left;
-	font-weight: 700;
+	font-weight: 400;
 	overflow: hidden;
 	padding-right: 15px;
 	text-align: right;
@@ -167,14 +173,17 @@ ul {
 
 /* Input */
 .inputMessage {
-	font-size: 16px;
+	font-family: "Helvetica Neue", 
+							 "Helvetica",
+							 sans-serif;
+	font-size: 1.2em;
 	border: none;
 	border-bottom: 3px solid rgb(130, 224, 255);
 	bottom: 0;
 	height: 60px;
 	left: 0;
 	outline: none;
-	padding-left: 15px;
+	padding-left: 20px;
 	position: absolute;
 	right: 0;
 	width: 100%;

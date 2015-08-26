@@ -5,7 +5,7 @@ $(function() {
   var COLORS              = [
     '#9b59b6', '#3498db', '#2ecc71', '#1abc9c',
     '#f1c40f', '#2980b9', '#27ae60', '#16a085',
-    '#c0392b', '#f39c12', '#e74c3c', '#e67e22'
+    '#c0392b', '#f39c12', '#e74c3c', '#82E0FF'
   ];
 
   // Read simplepeer
@@ -127,12 +127,11 @@ $(function() {
       } else {
         addChatMessage({
           message: "No need to call yourself",
-          username: "$Mentorance",
+          username: "Mentorance",
         });
       }
     },
 
-    //LEFT HERE, working on the actions commands a user can make 
     exit: function(username) {
       $blackPage.fadeIn(300, function(){
         location.reload();
@@ -144,8 +143,8 @@ $(function() {
     },
 
     // SAVE user session
-    save: function(target) {
-      console.log('Saving my name', target);
+    end: function(target) {
+      videoOff();
       // LocalStorage
     },
   };
@@ -164,13 +163,13 @@ $(function() {
       if (message[0] === "$" && message.split('$')[1] === 'video') {
         return message.split('$')[1];
       }
-      if (message[0] === "$" && message.split('$')[1] === 'help') {
+      if (message[0] === "$" && message.split('$')[1] === 'end') {
         return message.split('$')[1];
       }
       return message.split('.')[1].split('(')[0];
     }
     catch (err) {
-      console.log(err);
+      return err;
     }
   }
 
@@ -299,7 +298,6 @@ $(function() {
   }
 
 // Keyboard events
-
   $(window).keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
@@ -323,7 +321,6 @@ $(function() {
   });
 
 // Click events
-
   // Focus input when clicking anywhere on login page
   $loginPage.click(function () {
     $currentInput.focus();
@@ -335,14 +332,17 @@ $(function() {
   });
 
 // Socket events
-
   // Whenever the server emits 'login', log the login message
   socket.on('login', function (data) {
     connected = true;
     // Display the welcome message
-    var message = "<span class='lead'>" + data.username;
+    var message = "<span class='lead'>Mentorance" ;
     log(message, { prepend: true });
     addParticipantsMessage(data);
+    addChatMessage({
+      message: ("Welcome " + data.username),
+      username: "Mentorance",
+    });
   });
 
   // Whenever the server emits 'new message', update the chat body
@@ -375,7 +375,6 @@ $(function() {
 
 
 //Video events
-
   function onPeerStream(stream) {
     $chatPage.fadeOut(600);
     $videoPage.fadeIn(3000);
@@ -384,32 +383,20 @@ $(function() {
     video.src       = window.URL.createObjectURL(stream);
     video.play();
 
-    //TODO - To be called on pressing enter === 13
-    $inputMessage.on('input', function (){
-      if ($inputMessage.val() === '$disconnect') {
-        console.log('Disconnecting call...')
-        videoOff();
-      }; 
-    });
-
-    $(window).keypress(function (event) {
-    console.log('Press "C" to go back to the Chat');
+    $(window).keyup(function (event) {
     //Audio connection will still be ON, going to chat
-      if (event.keyCode === 67) {
+    // Pressing 'ESC' exist the video window
+      if (event.keyCode === 27){
         displayChat();
-        console.log('Call "$video" to get back to the call');
-      }
-      // TODO Disconnect call and prompt the chat room
-      if (event.keyCode === 75) {
-        videoOff();
-        displayChat();
-        console.log('Disconnecting "call"...');
+        addChatMessage({
+          message: "Call '$video' to get back to it",
+          username: "Mentorance",
+        });
       }
     });
-
-    console.log('Ready to video stream.');
   }
 
+// BIG TODOOOO
 // FIX THE Disconnecting CALL
   function videoOff() {
       window.stream.stop();
@@ -424,8 +411,8 @@ $(function() {
   }
 
   function displayVideo() {
-    $videoPage.fadeIn(3000);
-    $chatPage.fadeOut(600);
+    $videoPage.fadeIn(1800);
+    $chatPage.fadeOut(900);
   }
 
   function displayHelp () {
