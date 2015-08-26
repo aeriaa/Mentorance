@@ -12,7 +12,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(routes);
 
 // Singleton variables
-var usernames   = {};
+var usernames   = {}; 
 var numUsers    = 0;
 var sockets     = {};
 

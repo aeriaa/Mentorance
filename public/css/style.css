@@ -6,7 +6,7 @@
 h1 {
 	font-family: 
 		"Helvetica Neue",
-	 	"Helvetica Neue",
+		"Helvetica",
 	 	"Inconsolata",
 	 	sans-serif;
 	font-weight: 100;
@@ -21,7 +21,7 @@ html {
 
 html, input {
 	font-family: 
-		"Inconsolata"
+		"Inconsolata",
 		"Helvetica Neue",
 		sans-serif;
 }
@@ -53,11 +53,6 @@ ul {
 
 /* Login Page */
 .login.page {
-	background-color: #141414;
-}
-
-.black.page {
-	display: none;
 	background-color: #141414;
 }
 
@@ -94,7 +89,9 @@ ul {
 	letter-spacing: 3px;
 }
 
-.login.page .title, .login.page .usernameInput {
+.login.page .title, 
+.login.page .usernameInput, 
+.help.page {
 	color: white;
 	font-weight: 100;
 }
@@ -108,12 +105,26 @@ ul {
 .video.page {
 	background: #141414;
 	display: none;
-	color: white;
+}
+
+/*Help page*/
+.help.page {
+	display: none;
+}
+
+/*Black page*/
+.black.page {
+	display: none;
+	background-color: #141414;
 }
 
 /* Font */
 .messages {
 	font-size: 150%;
+}
+
+.title#error {
+	color: rgb(130, 224, 255);
 }
 
 .inputMessage {

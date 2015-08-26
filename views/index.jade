@@ -7,7 +7,7 @@ block content
       .chatArea
         ul.messages
         input(class="inputMessage" 
-              placeholder="Just type... Press 'Enter' to Send")
+              placeholder="Start typing | 'Enter' to Send | Call '$exit' to leave")
     //- Login 
     li.login.page
       .form
@@ -17,6 +17,7 @@ block content
         input(class="usernameInput" 
               type="text" 
               maxlength="14")
+        h3#error.title Please type your name
     //- Video
     li.video.page.embed-responsive.embed-responsive-4by3
       video.embed-responsive-item

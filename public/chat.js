@@ -10,6 +10,7 @@ $(function() {
 
   // Read simplepeer
   var SimplePeer = window.SimplePeer;
+  var peer;
 
   // Initialize variables
   var socket         = io();
@@ -20,8 +21,10 @@ $(function() {
   var $inputMessage  = $('.inputMessage');
   var $loginPage     = $('.login.page');
   var $chatPage      = $('.chat.page');
+  var $helpPage      = $('.help.page');
   var $videoPage     = $('.video.page');
   var $blackPage     = $('.black.page');
+  var $errorInput    = $('.title#error');
 
   // Prompt for setting a user name
   var username;
@@ -29,16 +32,41 @@ $(function() {
   var typing         = false;
   var $currentInput  = $usernameInput.focus();
   var lastTypingTime;
-  var peer;
 
+  function pumpingFade (target) {
+    target.fadeOut(2700, function(){
+      target.fadeIn(2700, pumpingFade(target));
+    });
+  } 
   //On initialization
   function displayLogin () {
-    $brand.fadeIn(1800);
+    $brand.fadeIn(1800, pumpingFade($brand));
     $title.fadeIn(2700);
     $usernameInput.hide().fadeIn(3600);
+    $errorInput.hide();
   };
 
   displayLogin();
+
+  function setUsername () {
+    username = cleanInput($usernameInput.val().trim());
+    // If the user name is valid
+    if (username) {
+      $loginPage.fadeOut(600);
+      $chatPage.fadeIn(3000);
+      $loginPage.off('click');
+      $currentInput = $inputMessage.focus();
+      // $ added after the name has been written to prevent empty names.
+      username      = "$" + username;
+      // Tell the server your user name
+      socket.emit('add user', username);
+      // If the user name is empty
+    } else {
+      $errorInput.fadeIn(600, function (){
+        $errorInput.fadeOut(1200);
+      });
+    }
+  }
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -48,22 +76,7 @@ $(function() {
       message += "<strong>" + data.numUsers + "</strong> users connected";
     }
     log(message);
-  };
-
-  function setUsername () {
-    username = cleanInput($usernameInput.val().trim());
-
-    // If the user name is valid
-    if (username) {
-      $loginPage.fadeOut(600); //on "Mdisconnect" loginPage.fadeIn();
-      $chatPage.fadeIn(3000); //on "Mdisconnect" chatPage.hide();
-      $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
-      username      = "$" + username;
-      // Tell the server your user name
-      socket.emit('add user', username);
-    }
-  };
+  }
 
   function sendMessage() {
     // Prevent markup from being injected into the message
@@ -76,7 +89,7 @@ $(function() {
       $inputMessage.val('');
       actionF(username, message, target);
     }
-  };
+  }
 
   var actions = {
     message: function(username, message) {
@@ -88,30 +101,35 @@ $(function() {
     },
 
     call: function(username, message, target) {
-      navigator.webkitGetUserMedia({ video: true, audio: true }, 
-        function(stream) {
-          peer = new SimplePeer({
-            initiator: true,
-            trickle:   false,
-            stream:    stream,
-          });
-
-          peer.on('signal', function (data) {
-            console.log('You are calling %s...', target);
-            socket.emit('call', {
-              signal: data,
-              target: target,
+      if (username !== target) {
+        navigator.webkitGetUserMedia({ video: true, audio: true }, 
+          function(stream) {
+            peer = new SimplePeer({
+              initiator: true,
+              trickle:   false,
+              stream:    stream,
             });
-          });
 
-          peer.on('stream', onPeerStream);
-          peer.on('error', onPeerError);
-
-        }, 
-        function (err) {
-          console.error(err);
-        }
-      );
+            peer.on('signal', function (data) {
+              console.log('You are calling %s...', target);
+              socket.emit('call', {
+                signal: data,
+                target: target,
+              });
+            });
+            peer.on('stream', onPeerStream);
+            peer.on('error', onPeerError);
+          }, 
+          function (err) {
+            console.error(err);
+          }
+        );
+      } else {
+        addChatMessage({
+          message: "No need to call yourself",
+          username: "$Mentorance",
+        });
+      }
     },
 
     //LEFT HERE, working on the actions commands a user can make 
@@ -119,6 +137,16 @@ $(function() {
       $blackPage.fadeIn(300, function(){
         location.reload();
       });
+    },
+
+    video: function() {
+      displayVideo();
+    },
+
+    // SAVE user session
+    save: function(target) {
+      console.log('Saving my name', target);
+      // LocalStorage
     },
   };
 
@@ -129,14 +157,20 @@ $(function() {
   // TODO Use regex to do this
   function getActionFromMessage(message) {
     try {
-      if (message[0] === "$" && message[1] === 'e') {
+      // '$exit' command
+      if (message[0] === "$" && message.split('$')[1] === 'exit') {
         return message.split('$')[1];
-        console.log(message.split('$')[1]);
+      }
+      if (message[0] === "$" && message.split('$')[1] === 'video') {
+        return message.split('$')[1];
+      }
+      if (message[0] === "$" && message.split('$')[1] === 'help') {
+        return message.split('$')[1];
       }
       return message.split('.')[1].split('(')[0];
     }
     catch (err) {
-      return false;
+      console.log(err);
     }
   }
 
@@ -145,7 +179,6 @@ $(function() {
   }
 
   // TODO - Check if user exists and is connected.
-
 
   // Log a message
   function log(message, options) {
@@ -307,9 +340,7 @@ $(function() {
   socket.on('login', function (data) {
     connected = true;
     // Display the welcome message
-    var message = "<span>Welcome to </span>"
-    message    += "<span class='lead'>Mentorance - ";
-    message    += "<strong>" + data.username + "</strong>";
+    var message = "<span class='lead'>" + data.username;
     log(message, { prepend: true });
     addParticipantsMessage(data);
   });
@@ -346,7 +377,6 @@ $(function() {
 //Video events
 
   function onPeerStream(stream) {
-    console.log('To disconnect, call "$disconnect"');
     $chatPage.fadeOut(600);
     $videoPage.fadeIn(3000);
     window.stream   = stream;
@@ -360,39 +390,47 @@ $(function() {
         console.log('Disconnecting call...')
         videoOff();
       }; 
-
-      if ($inputMessage.val() === '$video') {
-        displayVideo();
-      };
     });
-
-    function videoOff() {
-      video.pause();
-      video.src = "";
-      window.stream.stop();
-    }
 
     $(window).keypress(function (event) {
     console.log('Press "C" to go back to the Chat');
     //Audio connection will still be ON, going to chat
       if (event.keyCode === 67) {
         displayChat();
-        console.log('Call "$video" to get back to the Call');
+        console.log('Call "$video" to get back to the call');
+      }
+      // TODO Disconnect call and prompt the chat room
+      if (event.keyCode === 75) {
+        videoOff();
+        displayChat();
+        console.log('Disconnecting "call"...');
       }
     });
 
     console.log('Ready to video stream.');
   }
 
+// FIX THE Disconnecting CALL
+  function videoOff() {
+      window.stream.stop();
+      displayChat();
+    }
+
   function displayChat() {
-    $inputMessage.val('');
-    $videoPage.fadeOut(600);
+    $currentInput = $inputMessage.focus();
     $chatPage.fadeIn(3000);
+    $videoPage.fadeOut(600);
+    $inputMessage.val('');
   }
 
   function displayVideo() {
-    $chatPage.fadeOut(600);
     $videoPage.fadeIn(3000);
+    $chatPage.fadeOut(600);
+  }
+
+  function displayHelp () {
+    $currentInput = $usernameInput.focus();
+    $helpPage.fadeIn(3000);
   }
 
 // TODO - Allow private messaging
