@@ -415,7 +415,7 @@ $(function() {
     var users = "<span>";
     for (username in data.usernames){
       if (username === data.user){
-        users += username + " - ";
+        users += "You - ";
       } else {
         users += "<strong>" + username + "</strong> - ";
       }
