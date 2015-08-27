@@ -144,7 +144,7 @@ $(function() {
         displayVideo();
       } else {
         addChatMessage({
-          message: "No video connections yet. Use '.call' on the user's '$username' to call them",
+          message: "No video connections. Use '.call' on the user's '$username' to call them",
           username: "Mentorance",
         });
       }
@@ -421,11 +421,10 @@ $(function() {
     });
   }
 
-// BIG TODOOOO
-// FIX THE Disconnecting CALL
+// Disconnecting CALL
   function videoOff() {
     displayChat();
-    window.stream.stop();
+    peer.stream.stop();
     peerConnected = false;
   }
 
