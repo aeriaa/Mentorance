@@ -135,6 +135,7 @@ $(function() {
 
     quit: function(username) {
       $blackPage.fadeIn(900, function(){
+        $usernameInput.hide();
         location.reload();
       });
     },
