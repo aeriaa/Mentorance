@@ -17,6 +17,7 @@ h1 {
 html {
 	font-weight: 300;
 	-webkit-font-smoothing: antialiased;
+	background-color: #141414;
 }
 
 html, input {
@@ -164,9 +165,10 @@ ul {
 .username {
 	font-family: "Inconsolata",
 							 "Helvetica Neue", 
-							 "Helvetica";
+							 "Helvetica",
+							 sans-serif;
 	float: left;
-	font-weight: 400;
+	font-weight: 600;
 	overflow: hidden;
 	padding-right: 15px;
 	text-align: right;

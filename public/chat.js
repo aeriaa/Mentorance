@@ -134,11 +134,13 @@ $(function() {
     },
 
     quit: function(username) {
+      $usernameInput.hide();
       $blackPage.fadeIn(900, function(){
-        $usernameInput.hide();
         location.reload();
       });
     },
+
+    // reportAbuse: for bullies.
 
     video: function() {
       if (peerConnected) {
