@@ -8,8 +8,9 @@ $(function() {
     '#c0392b', '#f39c12', '#e74c3c', '#82E0FF'
   ];
 
-  // Read simplepeer
-  var SimplePeer = window.SimplePeer;
+  // Read simplepeer.js
+  var SimplePeer    = window.SimplePeer;
+  var peerConnected = false;
   var peer;
 
   // Initialize variables
@@ -34,7 +35,7 @@ $(function() {
   var lastTypingTime;
 
   function pumpingFade (target) {
-    target.fadeOut(2700, function(){
+    target.fadeOut(3000, function(){
       target.fadeIn(2700, pumpingFade(target));
     });
   } 
@@ -62,7 +63,7 @@ $(function() {
       socket.emit('add user', username);
       // If the user name is empty
     } else {
-      $errorInput.fadeIn(600, function (){
+      $errorInput.fadeIn(300, function (){
         $errorInput.fadeOut(1200);
       });
     }
@@ -132,21 +133,38 @@ $(function() {
       }
     },
 
-    exit: function(username) {
+    quit: function(username) {
       $blackPage.fadeIn(300, function(){
         location.reload();
       });
     },
 
     video: function() {
-      displayVideo();
+      if (peerConnected) {
+        displayVideo();
+      } else {
+        addChatMessage({
+          message: "No video connections yet. Use '.call' on the user's '$username' to call them",
+          username: "Mentorance",
+        });
+      }
     },
 
-    // SAVE user session
-    end: function(target) {
-      videoOff();
-      // LocalStorage
+    end: function() {
+      if (peerConnected) {
+        videoOff();
+        addChatMessage({
+          message: "Ending call...",
+          username: "Mentorance",
+        });
+      } else {
+        addChatMessage({
+          message: "You don't have a '$call' to '.end'. Use '.call' on the user's '$username' to call them",
+          username: "Mentorance",
+        });
+      }
     },
+
   };
 
   function onPeerError(error) {
@@ -156,15 +174,14 @@ $(function() {
   // TODO Use regex to do this
   function getActionFromMessage(message) {
     try {
-      // '$exit' command
-      if (message[0] === "$" && message.split('$')[1] === 'exit') {
-        return message.split('$')[1];
+      if (message.split('$')[1] === 'quit') {
+        return 'quit';
       }
-      if (message[0] === "$" && message.split('$')[1] === 'video') {
-        return message.split('$')[1];
+      if (message.split('$')[1] === 'video') {
+        return 'video';
       }
-      if (message[0] === "$" && message.split('$')[1] === 'end') {
-        return message.split('$')[1];
+      if (message.split('$')[1] === 'call.end') {
+        return 'end';
       }
       return message.split('.')[1].split('(')[0];
     }
@@ -312,6 +329,12 @@ $(function() {
       } else {
         setUsername();
       }
+    } else if (event.keyCode === 27 && !peerConnected){
+      displayChat();
+      addChatMessage({
+        message: "To exit Mentorance, call '$quit'",
+        username: "Mentorance",
+      });
     }
   });
 
@@ -378,6 +401,8 @@ $(function() {
   function onPeerStream(stream) {
     $chatPage.fadeOut(600);
     $videoPage.fadeIn(3000);
+
+    peerConnected   = true;
     window.stream   = stream;
     var video       = document.querySelector('video');
     video.src       = window.URL.createObjectURL(stream);
@@ -386,10 +411,10 @@ $(function() {
     $(window).keyup(function (event) {
     //Audio connection will still be ON, going to chat
     // Pressing 'ESC' exist the video window
-      if (event.keyCode === 27){
+      if (event.keyCode === 27 && peerConnected){
         displayChat();
         addChatMessage({
-          message: "Call '$video' to get back to it",
+          message: "Call '$video' to go back || '$call.end' to end call",
           username: "Mentorance",
         });
       }
@@ -399,9 +424,10 @@ $(function() {
 // BIG TODOOOO
 // FIX THE Disconnecting CALL
   function videoOff() {
-      window.stream.stop();
-      displayChat();
-    }
+    displayChat();
+    window.stream.stop();
+    peerConnected = false;
+  }
 
   function displayChat() {
     $currentInput = $inputMessage.focus();
