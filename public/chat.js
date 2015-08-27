@@ -134,7 +134,7 @@ $(function() {
     },
 
     quit: function(username) {
-      $blackPage.fadeIn(300, function(){
+      $blackPage.fadeIn(900, function(){
         location.reload();
       });
     },
