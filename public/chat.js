@@ -133,15 +133,18 @@ $(function() {
       }
     },
 
-    quit: function(username) {
+    quit: function(username){
       $usernameInput.hide();
       $blackPage.fadeIn(900, function(){
         location.reload();
       });
     },
 
-    // reportAbuse: for bullies.
+    show: function (username){
+      socket.emit('get connected users', username);
+    },
 
+    // reportAbuse: for bullies.
     video: function() {
       if (peerConnected) {
         displayVideo();
@@ -185,6 +188,9 @@ $(function() {
       }
       if (message.split('$')[1] === 'call.end') {
         return 'end';
+      }
+      if (message.split('$')[1] === 'users.show') {
+        return 'show';
       }
       return message.split('.')[1].split('(')[0];
     }
@@ -360,9 +366,14 @@ $(function() {
 // Socket events
   // Whenever the server emits 'login', log the login message
   socket.on('login', function (data) {
-    connected = true;
+    connected     = true;
+    var message   = "<span class='lead'>Mentorance";
+    var user      = "";
     // Display the welcome message
-    var message = "<span class='lead'>Mentorance" ;
+    for (username in data.usernames){
+      user += "<span><strong>" + username + "</strong>" + " - ";
+    }
+    log(user, { prepend: true });
     log(message, { prepend: true });
     addParticipantsMessage(data);
     addChatMessage({
@@ -399,6 +410,18 @@ $(function() {
     removeChatTyping(data);
   });
 
+  socket.on('connected usernames', function (data){
+    console.log(data.usernames);
+    var users = "<span>";
+    for (username in data.usernames){
+      if (username === data.user){
+        users += username + " - ";
+      } else {
+        users += "<strong>" + username + "</strong> - ";
+      }
+    }
+    log(users);
+  });
 
 //Video events
   function onPeerStream(stream) {

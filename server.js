@@ -41,6 +41,7 @@ io.on('connection', function (socket) {
     socket.emit('login', {
       numUsers: numUsers,
       username: username,
+      usernames: usernames,
     });
     // echo globally (all clients) that a person has connected
     socket.broadcast.emit('user joined', {
@@ -75,6 +76,13 @@ io.on('connection', function (socket) {
       });
       console.log('%s disconnected', socket.username);
     }
+  });
+
+  socket.on('get connected users', function (username){
+    socket.emit('connected usernames', {
+      usernames: usernames,
+      user:      username,
+    });
   });
 
 //Video Sockets
