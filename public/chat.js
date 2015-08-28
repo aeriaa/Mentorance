@@ -17,6 +17,7 @@ $(function() {
   var socket         = io();
   var $title         = $('.title');
   var $brand         = $('.brand');
+  var $beta          = $('#beta');
   var $usernameInput = $('.usernameInput');
   var $messages      = $('.messages');
   var $inputMessage  = $('.inputMessage');
@@ -35,15 +36,16 @@ $(function() {
   var lastTypingTime;
 
   function pumpingFade (target) {
-    target.fadeOut(3000, function(){
-      target.fadeIn(2700, pumpingFade(target));
+    target.fadeOut(2100, function(){
+      target.fadeIn(2100, pumpingFade(target));
     });
   } 
   //On initialization
   function displayLogin () {
-    $brand.fadeIn(1800, pumpingFade($brand));
+    $brand.fadeIn(1800);
+    $beta.fadeIn(2100, pumpingFade($beta));
     $title.fadeIn(2700);
-    $usernameInput.hide().fadeIn(3600);
+    $usernameInput.hide().fadeIn(3000);
     $errorInput.hide();
   };
 
